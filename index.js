@@ -1,26 +1,16 @@
-import express from "express"
-import router from "./src/routes/postRouter.js";
+// index.js
+import 'dotenv/config';
+import express from 'express';
+import router from './src/routes/postRouter.js';
 
 const app = express();
-const port = 3030;
+const port = process.env.PORT ?? 4020;
+const host = process.env.HOST ?? '0.0.0.0';
 
-// Middleware to parse JSON bodies
 app.use(express.json());
+app.get('/', (_req, res) => res.send('Hello World!'));
+app.use('/api/posts', router);
 
-// Sample route
-app.get('/', (req, res) => {
-  res.send('Hello World!');
+app.listen(port, host, () => {
+  console.log(`Server is running at http://${host}:${port}`);
 });
-app.use("/api/posts", router);
-
-export const posts = [
-  {id:1, title: "Postitus1", body: "Siin on lühikirjeldus postitus 1-le", createdAt: Date.now()},
-  {id:2, title: "Postitus2", body: "Siin on lühikirjeldus postitus 2-le", createdAt: Date.now()},
-  {id:3, title: "Postitus3", body: "Siin on lühikirjeldus postitus 3-le", createdAt: Date.now()}
-]
-
-// Start the server
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
-});
-

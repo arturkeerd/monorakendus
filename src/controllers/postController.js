@@ -1,7 +1,7 @@
-import { posts } from "../../index.js";
+import { posts, nextId } from '../db/posts.js';
 
 // GET /api/posts
-export const getPosts = (req, res) => {
+export const getPosts = (_req, res) => {
   res.json(posts);
 };
 
@@ -18,7 +18,7 @@ export const createPost = (req, res) => {
   const { title, body } = req.body || {};
   if (!title || !body) return res.status(400).json({ error: "title and body required" });
 
-  const newPost = { id: nextId(), title, body };
+  const newPost = { id: nextId(), title, body, createdAt: Date.now() };
   posts.push(newPost);
   res.status(201).json(newPost);
 };
