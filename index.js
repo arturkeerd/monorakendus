@@ -1,4 +1,4 @@
-// index.js
+/* index.js
 import 'dotenv/config';
 import express from 'express';
 import router from './src/routes/postRouter.js';
@@ -14,3 +14,4 @@ app.use('/api/posts', router);
 app.listen(port, host, () => {
   console.log(`Server is running at http://${host}:${port}`);
 });
+*/
