@@ -1,5 +1,6 @@
 const POSTS_API = 'http://localhost:5000';
 const COMMENTS_API = 'http://localhost:5001';
+const QUERY_API = "http://localhost:5002";
 
 async function handle(response) {
   if (!response.ok) {
@@ -35,4 +36,8 @@ export async function createComment(postId, data) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ postId, ...data }),
   }));
+}
+
+export async function fetchQueryPosts() {
+  return handle(await fetch(`${QUERY_API}/posts`));
 }

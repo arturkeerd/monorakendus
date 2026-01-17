@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchPosts, createPost, fetchPost, deletePost } from "./api";
+import { createPost, deletePost, fetchQueryPosts } from "./api";
 import CommentsList from "./components/CommentsList";
 import CommentForm from "./components/CommentForm";
 
@@ -32,15 +32,26 @@ export default function App() {
     try {
       setLoading(true);
       setErr("");
-      const data = await fetchPosts();
-      setPosts(data);
+
+      const data = await fetchQueryPosts(); // objekt: { [id]: post }
+      const list = Object.values(data).sort((a, b) => b.id - a.id);
+
+      setPosts(
+        list.map(p => ({
+          ...p,
+          commentsCount: p.comments?.length ?? 0
+        }))
+      );
     } catch (e) {
       setErr(e.message || "Load error");
     } finally {
       setLoading(false);
     }
   }
-  useEffect(() => { load(); }, []);
+  
+  useEffect(() => {
+    load();
+  }, []);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -51,17 +62,13 @@ export default function App() {
     setPosts(prev => [{ ...created, commentsCount: 0 }, ...prev]);
   }
 
-  async function toggle(postId) {
-    if (expanded[postId]) {
-      setExpanded(prev => {
-        const copy = { ...prev };
-        delete copy[postId];
-        return copy;
-      });
-    } else {
-      const full = await fetchPost(postId);
-      setExpanded(prev => ({ ...prev, [postId]: full }));
-    }
+  function toggle(postId) {
+    setExpanded(prev => {
+      const copy = { ...prev };
+      if (copy[postId]) delete copy[postId];
+      else copy[postId] = true;
+      return copy;
+    });
   }
 
   function onCommentCreated(postId, comment) {
@@ -139,11 +146,8 @@ export default function App() {
 
               {expanded[p.id] && (
                 <div className="comments">
-                  <CommentsList comments={expanded[p.id].comments || []} />
-                  <CommentForm
-                    postId={p.id}
-                    onCreated={c => onCommentCreated(p.id, c)}
-                  />
+                  <CommentsList comments={p.comments || []} />
+                  <CommentForm postId={p.id} onCreated={() => load()} />
                 </div>
               )}
             </div>

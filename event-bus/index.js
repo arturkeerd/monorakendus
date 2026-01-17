@@ -1,3 +1,4 @@
+const axios = require("axios");
 const express = require("express");
 const cors = require("cors");
 
@@ -16,25 +17,23 @@ app.post("/events", async (req, res) => {
 
   // Forward to services (best-effort)
   try {
-    await fetch("http://localhost:5000/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(event),
-    });
-  } catch (e) {
+    await axios.post("http://localhost:5000/events", event);
+    } catch (e) {
     console.log("Failed to forward to posts:", e.message);
-  }
+    }
 
   try {
-    await fetch("http://localhost:5001/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(event),
-    });
-  } catch (e) {
+    await axios.post("http://localhost:5001/events", event);
+    } catch (e) {
     console.log("Failed to forward to comments:", e.message);
-  }
+    }
 
+  try {
+    await axios.post("http://localhost:5002/events", event);
+    } catch (e) {
+    console.log("Failed to forward to query:", e.message);
+    }
+    
   res.send({ status: "OK" });
 });
 
