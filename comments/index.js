@@ -26,6 +26,7 @@ app.get("/comments", (req, res) => {
   res.json(result);
 });
 
+// comments/index.js
 app.post("/comments", (req, res) => {
   const { postId, text } = req.body;
 
@@ -33,10 +34,13 @@ app.post("/comments", (req, res) => {
     return res.status(400).json({ error: "postId and text are required" });
   }
 
+  const now = new Date();
+
   const comment = {
     id: idCounter++,
     postId: Number(postId),
-    text,
+    body: text,                 // frontend ootab "body"
+    createdAt: now.toISOString() // frontend parsimiseks kindel ISO string
   };
 
   comments.push(comment);

@@ -3,8 +3,8 @@ const COMMENTS_API = 'http://localhost:5001';
 
 async function handle(response) {
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'API request failed');
+    const text = await response.text().catch(() => '');
+    throw new Error(text || `HTTP ${response.status}`);
   }
   return response.json();
 }
@@ -26,15 +26,13 @@ export async function fetchPost(id) {
 }
 
 export async function deletePost(id) {
-  return handle(await fetch(`${POSTS_API}/posts/${id}`, {
-    method: 'DELETE',
-  }));
+  return handle(await fetch(`${POSTS_API}/posts/${id}`, { method: 'DELETE' }));
 }
 
 export async function createComment(postId, data) {
   return handle(await fetch(`${COMMENTS_API}/comments`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+    body: JSON.stringify({ postId, ...data }),
   }));
 }
