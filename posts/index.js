@@ -31,7 +31,7 @@ app.get("/posts/:id", async (req, res) => {
   res.json({ ...post, comments });
 });
 
-app.post("/posts", (req, res) => {
+app.post("/posts", async (req, res) => {
   const { title, body } = req.body;
   if (!title || !body) {
     return res.status(400).json({ message: "title and body are required" });
@@ -46,7 +46,26 @@ app.post("/posts", (req, res) => {
   };
 
   posts.unshift(post);
+
+  try {
+    await fetch("http://localhost:5005/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "PostCreated",
+        data: post,
+      }),
+    });
+  } catch (e) {
+    console.log("Failed to publish PostCreated:", e.message);
+  }
+
   res.status(201).json(post);
+});
+
+app.post("/events", (req, res) => {
+  console.log("Event received in posts:", req.body.type);
+  res.send({});
 });
 
 app.delete("/posts/:id", (req, res) => {

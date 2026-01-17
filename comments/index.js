@@ -27,24 +27,42 @@ app.get("/comments", (req, res) => {
 });
 
 // comments/index.js
-app.post("/comments", (req, res) => {
-  const { postId, text } = req.body;
-
-  if (!postId || !text) {
-    return res.status(400).json({ error: "postId and text are required" });
+app.post("/comments", async (req, res) => {
+  const { postId, body } = req.body;
+  if (!postId || !body) {
+    return res.status(400).json({ message: "postId and body are required" });
   }
-
-  const now = new Date();
 
   const comment = {
     id: idCounter++,
     postId: Number(postId),
-    body: text,                 // frontend ootab "body"
-    createdAt: now.toISOString() // frontend parsimiseks kindel ISO string
+    body,
+    createdAt: new Date().toISOString(),
   };
 
   comments.push(comment);
+
+  // publish event
+  try {
+    await fetch("http://localhost:5005/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "CommentCreated",
+        data: comment,
+      }),
+    });
+  } catch (e) {
+    console.log("Failed to publish CommentCreated:", e.message);
+  }
+
   res.status(201).json(comment);
+});
+
+
+app.post("/events", (req, res) => {
+  console.log("Event received in comments:", req.body.type);
+  res.send({});
 });
 
 app.listen(5001, () => {

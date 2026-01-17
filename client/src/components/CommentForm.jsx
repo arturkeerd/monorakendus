@@ -10,7 +10,7 @@ export default function CommentForm({ postId, onCreated }) {
     if (!body.trim() || busy) return;
     setBusy(true);
     try {
-      const newC = await createComment(postId, { text: body });
+      const newC = await createComment(postId, { body });
       setBody("");
       onCreated?.(newC);
     } finally {
