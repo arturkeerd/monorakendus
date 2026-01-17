@@ -5,31 +5,28 @@ import CommentForm from "./components/CommentForm";
 
 export default function App() {
   const [posts, setPosts] = useState([]);
-  const [expanded, setExpanded] = useState({}); // { [postId]: { ...post, comments: [] } }
+  const [expanded, setExpanded] = useState({});
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
   async function onDelete(postId) {
-  // Optimistlik: uuenda kohe UI-d
-  setPosts(prev => prev.filter(p => p.id !== postId));
-  // sulge lahti klapitud plokk (kui oli)
-  setExpanded(prev => {
-    if (!prev[postId]) return prev;
-    const copy = { ...prev };
-    delete copy[postId];
-    return copy;
-  });
+    setPosts(prev => prev.filter(p => p.id !== postId));
+    setExpanded(prev => {
+      if (!prev[postId]) return prev;
+      const copy = { ...prev };
+      delete copy[postId];
+      return copy;
+    });
 
-  try {
-    await deletePost(postId);
-  } catch (e) {
-    // kui läks aia taha, lae nimekiri uuesti (või näita veateadet)
-    alert(e.message || "Delete failed");
-    load(); // tõmbab uuesti /api/posts
+    try {
+      await deletePost(postId);
+    } catch (e) {
+      alert(e.message || "Delete failed");
+      load();
+    }
   }
-}
 
   async function load() {
     try {
@@ -49,90 +46,110 @@ export default function App() {
     e.preventDefault();
     if (!title.trim() || !body.trim()) return;
     const created = await createPost({ title, body });
-    setTitle(""); setBody("");
+    setTitle("");
+    setBody("");
     setPosts(prev => [{ ...created, commentsCount: 0 }, ...prev]);
   }
 
   async function toggle(postId) {
     if (expanded[postId]) {
       setExpanded(prev => {
-        const copy = { ...prev }; delete copy[postId]; return copy;
+        const copy = { ...prev };
+        delete copy[postId];
+        return copy;
       });
     } else {
-      const full = await fetchPost(postId); // {id,title,body,createdAt,comments:[]}
+      const full = await fetchPost(postId);
       setExpanded(prev => ({ ...prev, [postId]: full }));
     }
   }
 
   function onCommentCreated(postId, comment) {
-    // uuenda lahtise posti kommentaaride listi
     setExpanded(prev => ({
       ...prev,
       [postId]: {
         ...prev[postId],
-        comments: [...(prev[postId]?.comments || []), comment]
-      }
+        comments: [...(prev[postId]?.comments || []), comment],
+      },
     }));
-    // uuenda ka ülevaate loendurit
+
     setPosts(prev =>
-      prev.map(p => p.id === postId
-        ? { ...p, commentsCount: (p.commentsCount || 0) + 1 }
-        : p
+      prev.map(p =>
+        p.id === postId
+          ? { ...p, commentsCount: (p.commentsCount || 0) + 1 }
+          : p
       )
     );
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: "40px auto", padding: 16 }}>
+    <div className="page">
       <h1>Postid</h1>
 
-      <form onSubmit={onSubmit} style={{ marginBottom: 24 }}>
-        <input
-          placeholder="Pealkiri"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          style={{ display: "block", width: "100%", marginBottom: 8 }}
-        />
-        <textarea
-          placeholder="Sisu"
-          value={body}
-          onChange={e => setBody(e.target.value)}
-          style={{ display: "block", width: "100%", height: 80, marginBottom: 8 }}
-        />
-        <button type="submit">Lisa postitus</button>
+      <form onSubmit={onSubmit} className="create-post">
+        <label className="field">
+          <span>Title</span>
+          <input
+            placeholder="Pealkiri"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+          />
+        </label>
+
+        <label className="field">
+          <span>Body</span>
+          <textarea
+            placeholder="Sisu"
+            value={body}
+            onChange={e => setBody(e.target.value)}
+          />
+        </label>
+
+        <button type="submit">Submit</button>
       </form>
 
+      <hr />
+
+      <h2>Posts</h2>
+
       {loading && <p>Laen…</p>}
-      {err && <p style={{ color: "red" }}>{err}</p>}
+      {err && <p className="error">{err}</p>}
 
-      {!loading && posts.map(p => (
-        <div key={p.id} style={{ border: "1px solid #ddd", padding: 12, marginBottom: 12 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline" }}>
-            <h3 style={{ margin: 0 }}>{p.title}</h3>
-            <small>
-              {new Date(p.createdAt).toLocaleString()} • kommentaare: {p.commentsCount ?? 0}
-            </small>
-          </div>
-          <p style={{ whiteSpace: "pre-wrap" }}>{p.body}</p>
+      {!loading && (
+        <div className="posts-grid">
+          {posts.map(p => (
+            <div key={p.id} className="post-card">
+              <h3 className="post-title">{p.title}</h3>
 
-          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <button onClick={() => toggle(p.id)}>
-              {expanded[p.id] ? "Peida kommentaarid" : "Näita kommentaare"}
-            </button>
-            <button onClick={() => onDelete(p.id)} style={{ color: "red" }}>
-              Kustuta
-            </button>
-          </div>
+              <div className="post-meta">
+                {p.createdAt ? new Date(p.createdAt).toLocaleString() : ""} • kommentaare:{" "}
+                {p.commentsCount ?? 0}
+              </div>
 
+              <div className="post-body">{p.body}</div>
 
-          {expanded[p.id] && (
-            <div style={{ marginTop: 12 }}>
-              <CommentsList comments={expanded[p.id].comments || []} />
-              <CommentForm postId={p.id} onCreated={(c) => onCommentCreated(p.id, c)} />
+              <div className="post-actions">
+                <button onClick={() => toggle(p.id)}>
+                  {expanded[p.id] ? "Peida kommentaarid" : "Näita kommentaare"}
+                </button>
+                <button className="danger" onClick={() => onDelete(p.id)}>
+                  Kustuta
+                </button>
+              </div>
+
+              {expanded[p.id] && (
+                <div className="comments">
+                  <CommentsList comments={expanded[p.id].comments || []} />
+                  <CommentForm
+                    postId={p.id}
+                    onCreated={c => onCommentCreated(p.id, c)}
+                  />
+                </div>
+              )}
             </div>
-          )}
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 }

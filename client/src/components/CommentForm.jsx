@@ -24,7 +24,7 @@ export default function CommentForm({ postId, onCreated }) {
         value={body}
         onChange={e => setBody(e.target.value)}
         placeholder="Lisa kommentaar…"
-        style={{ width: "100%", marginBottom: 8 }}
+        style={{ width: "90%", marginBottom: 8 }}
       />
       <button type="submit" disabled={busy}>
         {busy ? "Saadan…" : "Saada"}
