@@ -33,6 +33,12 @@ app.post("/events", async (req, res) => {
     } catch (e) {
     console.log("Failed to forward to query:", e.message);
     }
+
+  try {
+    await axios.post("http://localhost:5003/events", event);
+    } catch (e) {
+    console.log("Failed to forward to moderation:", e.message);
+    }
     
   res.send({ status: "OK" });
 });

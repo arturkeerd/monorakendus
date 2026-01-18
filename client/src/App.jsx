@@ -48,11 +48,11 @@ export default function App() {
       setLoading(false);
     }
   }
-  
+
   useEffect(() => {
     load();
   }, []);
-
+  
   async function onSubmit(e) {
     e.preventDefault();
     if (!title.trim() || !body.trim()) return;

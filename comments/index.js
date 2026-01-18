@@ -1,5 +1,7 @@
+// comments/index.js
 const express = require("express");
 const cors = require("cors");
+const axios = require("axios");
 
 const app = express();
 app.use(cors());
@@ -14,35 +16,27 @@ app.get("/health", (req, res) => {
 
 app.get("/comments", (req, res) => {
   const { postId } = req.query;
-
-  if (!postId) {
-    return res.status(400).json({ error: "postId query param is required" });
-  }
-
-  const result = comments.filter(
-    c => c.postId === Number(postId)
-  );
-
-  res.json(result);
+  if (!postId) return res.status(400).json({ error: "postId query param is required" });
+  console.log("CREATED COMMENT:", comment);
+  res.status(201).json(comment);
+  res.json(comments.filter(c => c.postId === Number(postId)));
 });
 
-// comments/index.js
 app.post("/comments", async (req, res) => {
   const { postId, body } = req.body;
-  if (!postId || !body) {
-    return res.status(400).json({ message: "postId and body are required" });
-  }
+  if (!postId || !body) return res.status(400).json({ message: "postId and body are required" });
 
   const comment = {
     id: idCounter++,
     postId: Number(postId),
     body,
+    status: "pending",
     createdAt: new Date().toISOString(),
   };
 
   comments.push(comment);
 
-  // publish event
+  // publish CommentCreated
   try {
     await fetch("http://localhost:5005/events", {
       method: "POST",
@@ -59,9 +53,27 @@ app.post("/comments", async (req, res) => {
   res.status(201).json(comment);
 });
 
+app.post("/events", async (req, res) => {
+  const { type, data } = req.body;
+  console.log("Event received in comments:", type);
 
-app.post("/events", (req, res) => {
-  console.log("Event received in comments:", req.body.type);
+  if (type === "CommentModerated") {
+    const comment = comments.find(c => c.id === data.id);
+    if (!comment) return res.send({});
+
+    comment.status = data.status;
+
+    try {
+      await axios.post("http://localhost:5005/events", {
+        type: "CommentUpdated",
+        data: comment,
+      });
+      console.log("Published CommentUpdated:", comment.id);
+    } catch (e) {
+      console.log("Failed to publish CommentUpdated:", e.message);
+    }
+  }
+
   res.send({});
 });
 

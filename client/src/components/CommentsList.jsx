@@ -1,11 +1,22 @@
 export default function CommentsList({ comments }) {
-  if (!comments?.length) return <p>Kommentaare veel pole.</p>;
+  const renderText = (c) => {
+    if (c.status === "pending") return "Kommentaar on modereerimise ootel";
+    if (c.status === "rejected") return "Kommentaar lükati tagasi";
+    return c.body; // approved või puuduv status
+  };
+
+  if (!comments?.length) return null;
+
   return (
-    <ul style={{ paddingLeft: 18 }}>
-      {comments.map(c => (
-        <li key={c.id} style={{ marginBottom: 6 }}>
-          <div>{c.body}</div>
-          <small>{new Date(c.createdAt).toLocaleString()}</small>
+    <ul className="comments-list">
+      {comments.map((c) => (
+        <li key={c.id}>
+          • {renderText(c)}
+          {c.createdAt ? (
+            <div className="comment-meta">
+              {new Date(c.createdAt).toLocaleString()}
+            </div>
+          ) : null}
         </li>
       ))}
     </ul>
