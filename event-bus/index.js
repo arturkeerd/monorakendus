@@ -8,42 +8,39 @@ app.use(express.json());
 
 const events = [];
 
-// receive + forward events
 app.post("/events", async (req, res) => {
   const event = req.body;
   events.push(event);
 
   console.log("Event received:", event.type);
 
-  // Forward to services (best-effort)
   try {
-    await axios.post("http://localhost:5000/events", event);
-    } catch (e) {
+    await axios.post("http://posts-srv:5000/events", event);
+  } catch (e) {
     console.log("Failed to forward to posts:", e.message);
-    }
+  }
 
   try {
-    await axios.post("http://localhost:5001/events", event);
-    } catch (e) {
+    await axios.post("http://comments-srv:5001/events", event);
+  } catch (e) {
     console.log("Failed to forward to comments:", e.message);
-    }
+  }
 
   try {
-    await axios.post("http://localhost:5002/events", event);
-    } catch (e) {
+    await axios.post("http://query-srv:5002/events", event);
+  } catch (e) {
     console.log("Failed to forward to query:", e.message);
-    }
+  }
 
   try {
-    await axios.post("http://localhost:5003/events", event);
-    } catch (e) {
+    await axios.post("http://moderation-srv:5003/events", event);
+  } catch (e) {
     console.log("Failed to forward to moderation:", e.message);
-    }
-    
+  }
+
   res.send({ status: "OK" });
 });
 
-// allow services to sync on restart
 app.get("/events", (req, res) => {
   res.send(events);
 });

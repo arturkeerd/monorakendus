@@ -51,7 +51,7 @@ app.get("/posts", (req, res) => {
 // Startup sync (vajab, et event-bus pakub GET /events)
 (async () => {
   try {
-    const { data: events } = await axios.get("http://localhost:5005/events");
+    const { data: events } = await axios.get("http://event-bus-srv:5005/events");
     for (const event of events) handleEvent(event);
     console.log(`Query synced ${events.length} events`);
   } catch (e) {

@@ -38,13 +38,9 @@ app.post("/comments", async (req, res) => {
 
   // publish CommentCreated
   try {
-    await fetch("http://localhost:5005/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "CommentCreated",
-        data: comment,
-      }),
+    await axios.post("http://event-bus-srv:5005/events", {
+      type: "CommentCreated",
+      data: comment,
     });
   } catch (e) {
     console.log("Failed to publish CommentCreated:", e.message);
@@ -64,10 +60,10 @@ app.post("/events", async (req, res) => {
     comment.status = data.status;
 
     try {
-      await axios.post("http://localhost:5005/events", {
-        type: "CommentUpdated",
-        data: comment,
-      });
+      await axios.post("http://event-bus-srv:5005/events", {
+      type: "CommentUpdated",
+      data: comment,
+    });
       console.log("Published CommentUpdated:", comment.id);
     } catch (e) {
       console.log("Failed to publish CommentUpdated:", e.message);

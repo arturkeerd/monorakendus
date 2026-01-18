@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const axios = require("axios");
 
 const app = express();
 app.use(cors());
@@ -23,10 +24,10 @@ app.get("/posts/:id", async (req, res) => {
 
   // kui tahad ka kohe kommentaarid kaasa (App.jsx ootab comments):
   let comments = [];
-  try {
-    const r = await fetch(`http://localhost:5001/comments?postId=${id}`);
-    if (r.ok) comments = await r.json();
-  } catch {}
+    try {
+      const { data } = await axios.get(`http://comments-srv:5001/comments?postId=${id}`);
+      comments = data;
+    } catch {}
 
   res.json({ ...post, comments });
 });
@@ -48,13 +49,9 @@ app.post("/posts", async (req, res) => {
   posts.unshift(post);
 
   try {
-    await fetch("http://localhost:5005/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "PostCreated",
-        data: post,
-      }),
+    await axios.post("http://event-bus-srv:5005/events", {
+      type: "PostCreated",
+      data: post,
     });
   } catch (e) {
     console.log("Failed to publish PostCreated:", e.message);
