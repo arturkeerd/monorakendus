@@ -4,7 +4,25 @@ const cors = require("cors");
 const axios = require("axios");
 
 const app = express();
-app.use(cors());
+
+const allowedOrigins = [
+  "https://blog.local",
+  "https://blog.local",
+  "https://localhost:3000",
+];
+
+const corsOptions = {
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error("CORS blocked: " + origin));
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: false,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 let comments = [];
@@ -16,9 +34,9 @@ app.get("/health", (req, res) => {
 
 app.get("/comments", (req, res) => {
   const { postId } = req.query;
-  if (!postId) return res.status(400).json({ error: "postId query param is required" });
-  console.log("CREATED COMMENT:", comment);
-  res.status(201).json(comment);
+  if (!postId) {
+    return res.status(400).json({ error: "postId query param is required" });
+  }
   res.json(comments.filter(c => c.postId === Number(postId)));
 });
 

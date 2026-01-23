@@ -3,7 +3,26 @@ const cors = require("cors");
 const axios = require("axios");
 
 const app = express();
-app.use(cors());
+
+const allowedOrigins = [
+  "https://blog.local",
+  "http://blog.local",
+  "http://localhost:3000",
+];
+
+const corsOptions = {
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error("CORS blocked: " + origin));
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: false,
+};
+
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 let posts = [];
@@ -19,20 +38,22 @@ app.get("/posts", (req, res) => {
 
 app.get("/posts/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const post = posts.find(p => p.id === id);
+  const post = posts.find((p) => p.id === id);
   if (!post) return res.status(404).json({ message: "Post not found" });
 
-  // kui tahad ka kohe kommentaarid kaasa (App.jsx ootab comments):
   let comments = [];
-    try {
-      const { data } = await axios.get(`http://comments-srv:5001/comments?postId=${id}`);
-      comments = data;
-    } catch {}
+  try {
+    const { data } = await axios.get(
+      `http://comments-srv:5001/comments?postId=${id}`
+    );
+    comments = data;
+  } catch {}
 
   res.json({ ...post, comments });
 });
 
-app.post("/posts", async (req, res) => {
+// NB: see route peab olemas olema, sest Ingress suunab siia /posts/create
+app.post("/posts/create", async (req, res) => {
   const { title, body } = req.body;
   if (!title || !body) {
     return res.status(400).json({ message: "title and body are required" });
@@ -67,7 +88,7 @@ app.post("/events", (req, res) => {
 
 app.delete("/posts/:id", (req, res) => {
   const id = Number(req.params.id);
-  posts = posts.filter(p => p.id !== id);
+  posts = posts.filter((p) => p.id !== id);
   res.status(204).end();
 });
 
