@@ -1,3 +1,4 @@
+// event-bus/index.js
 const axios = require("axios");
 const express = require("express");
 const cors = require("cors");
@@ -14,31 +15,24 @@ app.post("/events", async (req, res) => {
 
   console.log("Event received:", event.type);
 
-  try {
-    await axios.post("http://posts-srv:5000/events", event);
-  } catch (e) {
-    console.log("Failed to forward to posts:", e.message);
-  }
-
-  try {
-    await axios.post("http://comments-srv:5001/events", event);
-  } catch (e) {
-    console.log("Failed to forward to comments:", e.message);
-  }
-
-  try {
-    await axios.post("http://query-srv:5002/events", event);
-  } catch (e) {
-    console.log("Failed to forward to query:", e.message);
-  }
-
-  try {
-    await axios.post("http://moderation-srv:5003/events", event);
-  } catch (e) {
-    console.log("Failed to forward to moderation:", e.message);
-  }
-
+  // Respond immediately so a slow/unreachable downstream service (e.g., query)
+  // can't block the client request.
   res.send({ status: "OK" });
+
+  const targets = [
+    { name: "posts", url: "http://posts-srv:5000/events" },
+    { name: "comments", url: "http://comments-srv:5001/events" },
+    { name: "query", url: "http://query-srv:5002/events" },
+    { name: "moderation", url: "http://moderation-srv:5003/events" },
+  ];
+
+  await Promise.all(
+    targets.map(t =>
+      axios.post(t.url, event, { timeout: 2000 }).catch(err => {
+        console.log(`Failed to forward to ${t.name}:`, err.message);
+      })
+    )
+  );
 });
 
 app.get("/events", (req, res) => {

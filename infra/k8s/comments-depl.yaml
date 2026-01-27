@@ -16,3 +16,11 @@ spec:
         - name: comments
           image: arturkeerd/comments:latest
           imagePullPolicy: Always
+          env:
+            - name: AUTH_URL
+              value: http://auth-srv:5006
+            - name: ACCESS_TOKEN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secrets
+                  key: ACCESS_TOKEN_SECRET

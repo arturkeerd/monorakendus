@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+        - name: auth
+          image: arturkeerd/auth:latest
+          ports:
+            - containerPort: 5006
+          env:
+            - name: PORT
+              value: "5006"
+            - name: ACCESS_TOKEN_SECRET
+              value: "dev_access_secret_change_me"
+            - name: REFRESH_TOKEN_SECRET
+              value: "dev_refresh_secret_change_me"
+            - name: ACCESS_TTL
+              value: "24h"
+            - name: REFRESH_TTL
+              value: "7d"

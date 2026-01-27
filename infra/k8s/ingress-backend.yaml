@@ -38,3 +38,10 @@ spec:
                 name: query-srv
                 port:
                   number: 5002
+          - path: /auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-srv
+                port:
+                  number: 5006

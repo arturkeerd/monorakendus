@@ -10,6 +10,8 @@ const allowedOrigins = [
   "http://localhost:3000",
 ];
 
+const requireAuth = require("./middlewares/requireAuth");
+
 const corsOptions = {
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
@@ -21,7 +23,6 @@ const corsOptions = {
   credentials: false,
 };
 
-
 app.use(cors(corsOptions));
 app.use(express.json());
 
@@ -32,7 +33,8 @@ app.get("/health", (req, res) => {
   res.json({ status: "posts service ok" });
 });
 
-app.get("/posts", (req, res) => {
+// ✅ ainult kaitstud GET /posts
+app.get("/posts", requireAuth, (req, res) => {
   res.json(posts);
 });
 
@@ -41,13 +43,15 @@ app.get("/posts/:id", async (req, res) => {
   const post = posts.find((p) => p.id === id);
   if (!post) return res.status(404).json({ message: "Post not found" });
 
+  const COMMENTS_URL = process.env.COMMENTS_URL || "http://localhost:5001";
+
   let comments = [];
   try {
-    const { data } = await axios.get(
-      `http://comments-srv:5001/comments?postId=${id}`
-    );
+    const { data } = await axios.get(`${COMMENTS_URL}/comments?postId=${id}`);
     comments = data;
-  } catch {}
+  } catch (e) {
+    console.log("Failed to fetch comments:", e.message);
+  }
 
   res.json({ ...post, comments });
 });
